@@ -2,6 +2,7 @@ package com.ecommerce.microcommerce.web.controller;
 
 import com.ecommerce.microcommerce.dao.ProductDao;
 import com.ecommerce.microcommerce.model.Product;
+import com.ecommerce.microcommerce.web.exceptions.ProduitGratuitException;
 import com.ecommerce.microcommerce.web.exceptions.ProduitIntrouvableException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -16,6 +17,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -69,6 +72,8 @@ public class ProductController {
 
     public ResponseEntity<Void> ajouterProduit(@Valid @RequestBody Product product) {
 
+    	if (product.getPrix() == 0) throw new ProduitGratuitException("Le prix de vente n'est pas gratuit :)");
+    	
         Product productAdded =  productDao.save(product);
 
         if (productAdded == null)
@@ -103,6 +108,24 @@ public class ProductController {
         return productDao.chercherUnProduitCher(400);
     }
 
-
+    // Calculer marge des produits 
+    @GetMapping(value = "/AdminProduits")
+    public List<String>  calculerMargeProduit() {
+    	List<Product>listProduit = productDao.findAll();
+        List<String> listeProduitAvecMarge = new ArrayList<String>();
+    	for (Product produit : listProduit) {
+    		int margeProduit = produit.getPrix() - produit.getPrixAchat();
+    		listeProduitAvecMarge.add(produit+":"+margeProduit);
+		}
+    	return listeProduitAvecMarge;
+    	
+    }
+    
+    // trier les Produits par ordre Alphabetique
+    @GetMapping(value = "/Produits/trier")
+    public  List<Product>  trierProduitsParOrdreAlphabetique() {
+    	return productDao.OrderByNom();
+    }
+    
 
 }
